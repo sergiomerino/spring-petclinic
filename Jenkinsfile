@@ -1,11 +1,27 @@
-// lets allow the VERSION_PREFIX to be specified as a parameter to the build
-// but if not lets just default to 1.0
+def localItestPattern = ""
+try {
+  localItestPattern = ITEST_PATTERN
+} catch (Throwable e) {
+  localItestPattern = "*KT"
+}
+
+def localFailIfNoTests = ""
+try {
+  localFailIfNoTests = ITEST_FAIL_IF_NO_TEST
+} catch (Throwable e) {
+  localFailIfNoTests = "false"
+}
+
 def versionPrefix = ""
 try {
   versionPrefix = VERSION_PREFIX
 } catch (Throwable e) {
   versionPrefix = "1.0"
 }
+
+def canaryVersion = "${versionPrefix}.${env.BUILD_NUMBER}"
+
+def fabric8Console = "${env.FABRIC8_CONSOLE ?: ''}"
 
 node ('kubernetes'){
   git 'https://github.com/sergiomerino/spring-petclinic.git'
@@ -15,6 +31,31 @@ node ('kubernetes'){
 
     mavenCanaryRelease{
       version = canaryVersion
+    }
+
+    // TODO docker push?
+
+    mavenIntegrationTest{
+      environment = 'Testing'
+      failIfNoTests = localFailIfNoTests
+      itestPattern = localItestPattern
+    }
+
+    mavenRollingUpgrade{
+      environment = 'Staging'
+      stageDomain = STAGE_DOMAIN
+    }
+
+    approve{
+      room = null
+      version = canaryVersion
+      console = fabric8Console
+      environment = 'Staging'
+    }
+
+    mavenRollingUpgrade{
+      environment = 'Production'
+      stageDomain = PROMOTE_DOMAIN
     }
   }
 }
