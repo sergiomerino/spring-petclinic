@@ -1,0 +1,12 @@
+---
+pipeline: "workflows/maven/CanaryRelease/Jenkinsfile"
+chatRoom: "mychat"
+issueProjectName: "myissues"
+buildName: "spring-petclinic"
+codeReview: true
+links:
+  Current: "http://fabric8.vagrant.f8/kubernetes/pods?namespace=default"
+  Job: "http://jenkins.vagrant.f8/job/spring-petclinic"
+environments:
+  Current: "default"
+useLocalFlow: true
